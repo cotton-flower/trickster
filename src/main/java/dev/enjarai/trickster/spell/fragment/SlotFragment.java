@@ -1,33 +1,34 @@
 package dev.enjarai.trickster.spell.fragment;
 
-import java.util.Optional;
-import java.util.UUID;
-
-import com.mojang.datafixers.util.Either;
-
 import dev.enjarai.trickster.EndecTomfoolery;
+import dev.enjarai.trickster.Trickster;
+import dev.enjarai.trickster.item.component.FragmentComponent;
+import dev.enjarai.trickster.item.component.ModComponents;
 import dev.enjarai.trickster.pond.SlotHolderDuck;
 import dev.enjarai.trickster.spell.Fragment;
 import dev.enjarai.trickster.spell.SpellContext;
-import dev.enjarai.trickster.spell.blunder.BlockInvalidBlunder;
-import dev.enjarai.trickster.spell.blunder.BlunderException;
-import dev.enjarai.trickster.spell.blunder.EntityInvalidBlunder;
-import dev.enjarai.trickster.spell.blunder.ItemInvalidBlunder;
-import dev.enjarai.trickster.spell.blunder.MissingItemBlunder;
-import dev.enjarai.trickster.spell.blunder.NoPlayerBlunder;
-import dev.enjarai.trickster.spell.blunder.NoSuchSlotBlunder;
-import dev.enjarai.trickster.spell.blunder.UnknownEntityBlunder;
+import dev.enjarai.trickster.spell.blunder.*;
 import dev.enjarai.trickster.spell.trick.Trick;
 import io.wispforest.endec.Endec;
 import io.wispforest.endec.StructEndec;
 import io.wispforest.endec.impl.StructEndecBuilder;
 import io.wispforest.owo.serialization.endec.EitherEndec;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
+
+import java.util.Optional;
+import java.util.UUID;
+
+import com.mojang.datafixers.util.Either;
 
 public record SlotFragment(int slot, Optional<Either<BlockPos, UUID>> source) implements Fragment {
     public static final StructEndec<SlotFragment> ENDEC = StructEndecBuilder.of(
@@ -60,6 +61,27 @@ public record SlotFragment(int slot, Optional<Either<BlockPos, UUID>> source) im
     @Override
     public int getWeight() {
         return 64;
+    }
+
+    public void setStack(ItemStack itemStack, Trick trick, SpellContext ctx) {
+        var inventory = getInventory(trick, ctx);
+        inventory.trickster$slot_holder$setStack(slot, itemStack);
+    }
+
+    public void writeSpell(Fragment fragment, boolean closed, Optional<Text> name, Optional<ServerPlayerEntity> player, Trick trick, SpellContext ctx) throws BlunderException {
+        var inventory = getInventory(trick, ctx);
+        var stack = inventory.trickster$slot_holder$getStack(slot);
+        var updated = FragmentComponent.writeSpell(stack, fragment, closed, player, name);
+        if (updated.isEmpty()) throw new ImmutableItemBlunder(trick);
+        inventory.trickster$slot_holder$setStack(slot, updated.get());
+    }
+
+    public void clearSpell(Trick trick, SpellContext ctx) throws BlunderException {
+        var inventory = getInventory(trick, ctx);
+        ItemStack stack = inventory.trickster$slot_holder$getStack(slot);
+        var updated = FragmentComponent.clearSpell(stack);
+        if (updated.isEmpty()) throw new ImmutableItemBlunder(trick);
+        inventory.trickster$slot_holder$setStack(slot, updated.get());
     }
 
     public void swapWith(Trick trickSource, SpellContext ctx, SlotFragment other) throws BlunderException {
@@ -123,29 +145,19 @@ public record SlotFragment(int slot, Optional<Either<BlockPos, UUID>> source) im
     }
 
     /**
-     * Instead of taking items from the slot, directly reference the stored stack to modify it. 
-     * This may return an empty ItemStack if applicable.
+     * Instead of taking items from the slot, directly reference the stored stack to modify it.
      */
     public ItemStack reference(Trick trickSource, SpellContext ctx) {
-        return getStack(trickSource, ctx);
+        var stack = getStack(trickSource, ctx);
+
+        if (stack.isEmpty())
+            throw new MissingItemBlunder(trickSource);
+
+        return stack;
     }
 
     public Item getItem(Trick trickSource, SpellContext ctx) throws BlunderException {
         return getStack(trickSource, ctx).getItem();
-    }
-
-    public BlockPos getSourcePos(Trick trickSource, SpellContext ctx) {
-        return source
-            .map(either -> Either.unwrap(either
-                        .mapRight(uuid -> new EntityFragment(uuid, Text.literal(""))
-                            .getEntity(ctx)
-                            .orElseThrow(() -> new UnknownEntityBlunder(trickSource))
-                            .getBlockPos())))
-            .orElseGet(() -> ctx
-                    .source()
-                    .getPlayer()
-                    .orElseThrow(() -> new NoPlayerBlunder(trickSource))
-                    .getBlockPos());
     }
 
     private ItemStack getStack(Trick trickSource, SpellContext ctx) throws BlunderException {
@@ -194,7 +206,7 @@ public record SlotFragment(int slot, Optional<Either<BlockPos, UUID>> source) im
                 return s.left().get().toCenterPos();
             } else {
                 if (ctx.source().getWorld().getEntity(s.right().get()) instanceof Entity entity)
-                    return entity.getBlockPos().toCenterPos();
+                    return entity.getPos();
                 else throw new EntityInvalidBlunder(trickSource);
             }
         }).map(blockPos -> 8 + (float) (pos.toCenterPos().distanceTo(blockPos) * amount * 0.5)).orElse(0f);
@@ -207,26 +219,14 @@ public record SlotFragment(int slot, Optional<Either<BlockPos, UUID>> source) im
             this.inv = inv;
         }
 
-        @Override
         public int trickster$slot_holder$size() {
             return inv.size();
         }
 
-        @Override
         public ItemStack trickster$slot_holder$getStack(int slot) {
             return inv.getStack(slot);
         }
 
-        @Override
-        public boolean trickster$slot_holder$setStack(int slot, ItemStack stack) {
-            if (!inv.isValid(slot, stack))
-                return false;
-
-            inv.setStack(slot, stack);
-            return true;
-        }
-
-        @Override
         public ItemStack trickster$slot_holder$takeFromSlot(int slot, int amount) {
             var stack = inv.getStack(slot);
             var result = stack.copyWithCount(amount);
