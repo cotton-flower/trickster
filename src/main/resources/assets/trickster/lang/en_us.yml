@@ -25,11 +25,27 @@ trickster:
     import_example:
       .: Import this example spell?
       description: This will §loverwrite§r the Scroll and Quill in your other hand with the chosen example spell.
+    leash:
+      invalid_collar: "%s is not wearing untethered Bindings"
+      not_sneaking: "%s must be sneaking to tether them"
+      success: "Tether linked to %s's Bindings"
+      not_online: "Player not found"
+
+  tooltip:
+    collar_link: "Link: %s"
+    unlinked: Unlinked
+
+  gandalf:
+    stored: "Stored: %s"
+  merlin:
+    idling: "Idle"
+    draining: "Draining: %.2f"
+    filling: "Charging: %.2f"
 
   item_group: Trickster
 
   scroll_hat: 'Selected slot: %d'
-  scroll_executable: Single-use (%f Kilogandalfs)
+  scroll_executable: Single-use (%f kiloGandalfs)
 
   unnamed_entity: Unnamed %s
 
@@ -79,7 +95,6 @@ trickster:
     clear_spell: Alethophobe's Ploy
     write_spell: Notulist's Ploy
     write_closed_spell: Proprietary Notulist's Ploy
-    write_macro_ring: Macro Ploy
     read_macro_ring: Macro Delusion
     reveal: Showcase Stratagem
     read_crow_mind: Crow Mind Delusion
@@ -96,6 +111,7 @@ trickster:
     height_reflection: Stature Ingress
     sneaking_reflection: Alternative Ingress
     sprinting_reflection: Trekking Ingress
+    burning_reflection: Hearth's Ingress
     blocking_reflection: Guard Ingress
     raycast: Pinpoint Ingress
     raycast_side: Bearing Ingress
@@ -110,6 +126,7 @@ trickster:
     get_velocity: Movement Ingress
     add_velocity: Kinetic Ploy
     change_weight: Ploy of Featherweight
+    displace: Ploy of the Usurper
     store_entity: Containment Ploy
     release_entity: Extrication Ploy
 
@@ -153,6 +170,7 @@ trickster:
     list_remove: Expulsion Stratagem
     list_remove_element: Eviction Stratagem
     list_size: Tally Distortion
+    create_number_range: Interlude Distortion
 
     locate_glyph: Pinpoint Distortion
     locate_glyphs: Discovering Distortion
@@ -176,7 +194,6 @@ trickster:
     conjure_flower: Floral Ploy
     conjure_water: Aquatic Ploy
     conjure_light: Illumination Ploy
-    drain_fluid: Drought Ploy
     power_resonator: Resonance Ploy
     heat: Ploy of Investiture
     cool: Ploy of Divestiture
@@ -251,6 +268,7 @@ trickster:
       item_type: Item
       block_type: Block
       entity_type: Entity Type
+      string: String
     class:
       Fragment: Any
       AddableFragment: Addable
@@ -277,45 +295,8 @@ trickster:
       EntityTypeFragment: Entity Type
 
   blunder:
-    unknown_trick: "Unknown trick"
-    unknown_event: "Unknown event"
-    unknown_entity: "Unknown entity"
-    address_not_in_tree: "Spell does not contain a circle at this address: %s"
-    assertion: "Assertion failed for value: %s"
-    atomic_chunk_too_large: "Atomic spell is too large to be run in a single tick"
-    block_invalid:
-      block_supplied: "Invalid block type. Did not expect %s"
-      block_not_supplied: "Invalid block type."
-    block_too_hard: "Block cannot be broken by spells"
-    block_occupied: "Block at %s occupied"
-    block_unoccupied: "Block at %s unoccupied"
-    cannot_place_block: "Cannot place %s at %s"
-    cannot_edit_block: "Cannot edit block %s, restricted by operator."
-    division_by_zero: "Division by zero"
-    entity_already_stored: "There is already an entity stored in the offhand item"
-    entity_cannot_be_stored: "Cannot store %s"
-    entity_invalid: "Invalid entity"
-    execution_limit_reached: "Execution limit reached"
-    illegal_operation_in_atomic: "Illegal operation in atomic spell"
-    immutable_item: "Item immutable, cannot write spell"
-    incompatible_source: "Incompatible casting source"
-    incompatible_types: "Incompatible types"
-    index_out_of_bounds: "Index out of bounds: %s"
-    invalid_entity: "Invalid entity"
-    invalid_inputs: "Invalid inputs, the following signatures are valid for this trick:"
-    invalid_item: "Invalid item"
-    missing_amethyst: "Not enough amethyst in inventory"
-    missing_item: "Missing item"
-    nan: "Number must be a number"
-    no_free_item_slot: "No free item slot."
-    no_player : "No player available"
-    no_such_slot : "Item slot does not exist"
-    not_enough_mana: "Not enough mana, at least %s required"
-    number_too_large: "Number too large, expected %s or lesser"
-    number_too_small: "Number too small, expected %s or greater"
-    out_of_range: "Range out of bounds: %s is more than: %s"
     overweight_fragment: Result fragment is overweight, result is %s
-    overlapping_positions: "Overlapping positions : %s, %s"
+    missing_fragment: Missing at index %d, expected %s
 
 item.trickster:
   tome_of_tomfoolery: Tome of Tomfoolery
@@ -364,12 +345,16 @@ item.trickster:
   fez: Fez
   wand: Wand
   macro_ring: Macro Ring
+  amethyst_whorl: Amethyst Whorl
+  collar: Acolyte's Bindings
+  leash: Archmage's Tether
 
   amethyst_knot: Amethyst Knot
   emerald_knot: Emerald Knot
   diamond_knot: Diamond Knot
   echo_knot: Echo Knot
   cracked_echo_knot: Cracked Echo Knot
+  astral_knot: Astral Knot
   command_knot: Command Knot
 
   spell_core: Spell Core
@@ -382,6 +367,7 @@ block.trickster:
   modular_spell_construct: Modular Spell Construct
   light: Light
   scroll_shelf: Scroll Shelf
+  charging_array: Charging Array
 
 effect.trickster:
   mana_boost: Mana Hyperflux

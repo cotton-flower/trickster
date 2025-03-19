@@ -35,9 +35,9 @@ public class ModComponents {
                     .codec(ManaComponent.CODEC)
                     .cache()
     );
-    public static final ComponentType<SpellCoreComponent> SPELL_CORE = register(
-            "spell_core", builder -> builder
-                    .codec(SpellCoreComponent.CODEC)
+    public static final ComponentType<CollarLinkComponent> COLLAR_LINK = register(
+            "collar_link", builder -> builder
+                    .endec(CollarLinkComponent.ENDEC)
                     .cache()
     );
 
